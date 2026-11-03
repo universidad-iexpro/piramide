@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cartel con código QR · Universidad IEXPRO</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="assets/icono.png">
+<style>
+@font-face{font-family:Cinzel;src:url(assets/fonts/cinzel.woff2) format('woff2');font-weight:400 900;font-display:swap}
+@font-face{font-family:Montserrat;src:url(assets/fonts/montserrat.woff2) format('woff2');font-weight:100 900;font-display:swap}
+*{box-sizing:border-box}
+body{margin:0;background:#E9EAF2;color:#1B1F55;font:500 16px/1.45 Montserrat,system-ui,sans-serif}
+button{font:700 15px Montserrat,system-ui,sans-serif;min-height:46px;border-radius:12px;cursor:pointer}
+button:focus-visible{outline:3px solid #CD2B81;outline-offset:2px}
+.herramientas{max-width:640px;margin:16px auto;padding:16px;background:#fff;border-radius:12px}
+.herramientas label{display:block;font-weight:600;font-size:14px;margin-bottom:6px}
+.herramientas input{width:100%;font:500 15px Montserrat,system-ui,sans-serif;padding:11px;border:2px solid #D9DBE8;border-radius:10px}
+.fila{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+#imprimir{background:#CD2B81;border:0;color:#fff}
+#descargar{background:#fff;border:2px solid #363F82;color:#363F82}
+#aviso{margin:10px 0 0;padding:10px;background:#FBEAF3;color:#7C1850;border-radius:8px;font-size:14px}
+.cartel{width:min(100% - 32px,640px);margin:0 auto 24px;background:#fff;text-align:center;overflow:hidden;border-radius:14px}
+.logo{padding:26px 30px 16px}
+.logo img{width:min(100%,390px);height:auto;display:block;margin:auto}
+.heroe{position:relative;padding:44px 26px 36px;color:#fff;background:radial-gradient(90% 80% at 12% 10%,#CD2B81 0,transparent 62%),radial-gradient(90% 80% at 92% 22%,#5B3BF0 0,transparent 60%),#141A52}
+.heroe svg.arco{position:absolute;left:0;top:-1px;width:100%;height:30px}
+.heroe small{display:block;font-size:13px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#FFB2DB}
+.heroe h1{margin:8px 0 8px;font:800 clamp(32px,7.4vw,50px)/1.05 Cinzel,Georgia,serif}
+.heroe p{margin:0 0 20px;font-size:18px}
+.marco{display:inline-block;padding:14px;background:#fff;border-radius:18px;box-shadow:0 0 0 4px #FF3D9F,0 0 44px rgba(255,61,159,.8)}
+#qr{display:block;width:min(66vw,330px);height:auto;image-rendering:pixelated}
+.pasos{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:24px 0 0;font-weight:700;font-size:15px}
+.pasos b{color:#FF8CC8}
+#direccion{margin:0;padding:12px 16px;font-size:13px;color:#555B82;word-break:break-all}
+@page{size:letter portrait;margin:10mm}
+@media print{
+  body{background:#fff}
+  .herramientas{display:none}
+  .cartel{width:100%;margin:0;border-radius:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;print-color-adjust:exact}
+  .logo img{width:105mm}
+  #qr{width:95mm}
+  .heroe{padding-block:14mm 12mm}
+}
+</style>
+</head>
+<body>
+<section class="herramientas">
+  <label for="url">Dirección a la que lleva el código QR</label>
+  <input id="url" type="url" inputmode="url" spellcheck="false">
+  <p id="aviso" hidden>Esta dirección solo funciona en este equipo. Publica la actividad y abre el cartel desde su dirección pública antes de imprimir.</p>
+  <div class="fila">
+    <button id="imprimir">Imprimir cartel</button>
+    <button id="descargar">Descargar QR</button>
+  </div>
+</section>
+<main class="cartel">
+  <div class="logo"><img src="assets/logo-iexpro.png" width="800" height="223" alt="Universidad IEXPRO. Formación de excelencia. Incorporada a la SEP, clave 07PSU0162R."></div>
+  <div class="heroe">
+    <small>Reto de liderazgo pedagógico</small>
+    <h1>Completa la pirámide</h1>
+    <p>Escanea, responde y revela el holograma.</p>
+    <div class="marco"><canvas id="qr" role="img" aria-label="Código QR de la actividad"></canvas></div>
+    <div class="pasos"><span><b>1.</b> Escanea</span><span><b>2.</b> Responde</span><span><b>3.</b> Descubre el holograma</span></div>
+  </div>
+  <p id="direccion"></p>
+</main>
+<script src="vendor/qrcode.js"></script>
+<script>
+'use strict';
+const entrada = document.getElementById('url'), lienzo = document.getElementById('qr'), aviso = document.getElementById('aviso');
+const MARGEN = 4, LADO = 1200;
+
+function dibujarQR(direccion) {
+  const qr = qrcode(0, 'M');
+  qr.addData(encodeURI(decodeURI(direccion)));
+  qr.make();
+  const n = qr.getModuleCount(), modulo = Math.floor(LADO / (n + MARGEN * 2)), lado = modulo * (n + MARGEN * 2);
+  lienzo.width = lienzo.height = lado;
+  const c = lienzo.getContext('2d');
+  c.fillStyle = '#fff';
+  c.fillRect(0, 0, lado, lado);
+  c.fillStyle = '#20265E';
+  for (let f = 0; f < n; f++) for (let k = 0; k < n; k++) if (qr.isDark(f, k)) c.fillRect((k + MARGEN) * modulo, (f + MARGEN) * modulo, modulo, modulo);
+}
+
+function actualizar() {
+  const direccion = entrada.value.trim();
+  if (!direccion) return;
+  let local = true;
+  try {
+    const u = new URL(direccion);
+    local = u.protocol === 'file:' || ['localhost', '127.0.0.1', '[::1]'].includes(u.hostname);
+  } catch {}
+  aviso.hidden = !local;
+  document.getElementById('direccion').textContent = direccion;
+  dibujarQR(direccion);
+}
+
+const propia = new URL('./', location.href).href;
+entrada.value = new URLSearchParams(location.search).get('url') || propia;
+entrada.addEventListener('input', actualizar);
+document.getElementById('imprimir').onclick = () => print();
+document.getElementById('descargar').onclick = () => {
+  const a = document.createElement('a');
+  a.download = 'qr-completa-la-piramide.png';
+  a.href = lienzo.toDataURL('image/png');
+  a.click();
+};
+actualizar();
+</script>
+</body>
+</html>
